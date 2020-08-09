@@ -33,7 +33,7 @@ public class IssueRepositoryImpl implements IssueRepository {
 	public IssueRepositoryImpl(Path issuesFilePath) {
 		this.issues = new ArrayList<Issue>();
 		this.issuesFilePath = issuesFilePath;
-		initializeIssuesFromFile();
+		this.initializeIssuesFromFile();
 	}
 
 	/*

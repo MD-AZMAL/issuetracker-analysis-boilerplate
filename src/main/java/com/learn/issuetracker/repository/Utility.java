@@ -33,7 +33,7 @@ public class Utility {
 
 	public static Issue parseIssue(String issueDetail) {
 		String[] issueData = issueDetail.split(",");
-		if(issueData[0].contains("IS")) {
+		if(issueData[0].startsWith("IS")) {
 			DateTimeFormatter dtFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 			LocalDate createdDate = LocalDate.parse(issueData[2],dtFormatter);
 			LocalDate resolutionDate = LocalDate.parse(issueData[3],dtFormatter);
