@@ -1,6 +1,8 @@
 package com.learn.issuetracker.service;
 
+import java.io.Console;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,7 +39,8 @@ public class IssueTrackerServiceImpl implements IssueTrackerService {
 	 * value in CURRENT_DATE variable
 	 */
 	public IssueTrackerServiceImpl(IssueRepository issueDao) {
-
+		today = LocalDate.parse(CURRENT_DATE);
+		this.issueDao = issueDao;
 	}
 
 	/*
@@ -49,7 +52,7 @@ public class IssueTrackerServiceImpl implements IssueTrackerService {
 	 */
 	@Override
 	public long getClosedIssueCount() {
-		return 0;
+		return this.getIssuesByStatus("CLOSED").size();
 	}
 
 	/*
@@ -59,7 +62,11 @@ public class IssueTrackerServiceImpl implements IssueTrackerService {
 
 	@Override
 	public Issue getIssueById(String issueId) throws IssueNotFoundException {
-		return null;
+		for(Issue I: this.issueDao.getIssues()) {
+			if(I.getIssueId().equals(issueId))
+				return I;
+		}
+		throw new IssueNotFoundException();
 	}
 
 	/*
@@ -70,7 +77,18 @@ public class IssueTrackerServiceImpl implements IssueTrackerService {
 	 */
 	@Override
 	public Optional<Employee> getIssueAssignedTo(String issueId) {
-		return null;
+		try {
+			Issue I = this.getIssueById(issueId);
+			Employee E = I.getAssignedTo();
+
+			if(E != null)
+				return Optional.of(E);
+
+			return Optional.empty();
+		} catch(IssueNotFoundException e) {
+			e.printStackTrace();
+			return Optional.empty();
+		}
 	}
 
 	/*
@@ -79,7 +97,14 @@ public class IssueTrackerServiceImpl implements IssueTrackerService {
 	 */
 	@Override
 	public List<Issue> getIssuesByStatus(String status) {
-		return null;
+		List<Issue> selectedIssues = new ArrayList<Issue>();
+
+		for(Issue I: this.issueDao.getIssues()) {
+			if(I.getStatus().equals(status))
+				selectedIssues.add(I);
+		}
+
+		return selectedIssues;
 	}
 
 	/*

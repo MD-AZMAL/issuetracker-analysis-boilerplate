@@ -18,69 +18,80 @@ public class Issue {
 
 	public Issue() {
 		//Default Constructor
+		this.issueId = "";
+		this.summary = "";
+		this.createdOn = LocalDate.now();
+		this.expectedResolutionOn = LocalDate.now();
 	}
 
 	/*
 	 * Complete the parameterized Constructor
 	 */
-	public Issue(String issueId, String summary, LocalDate createdOn, LocalDate expectedResolutionOn, String priority,
-			String status, Employee assignedTo) {
-
+	public Issue(final String issueId, final String summary, final LocalDate createdOn, final LocalDate expectedResolutionOn, final String priority,
+			final String status, final Employee assignedTo) {
+			
+			this.issueId = issueId;
+			this.summary = summary;
+			this.createdOn = createdOn;
+			this.expectedResolutionOn = expectedResolutionOn;
+			this.priority = priority;
+			this.status = status;
+			this.assignedTo = assignedTo;
 	}
 
 	public String getIssueId() {
-		return issueId;
+		return this.issueId;
 	}
 
-	public void setIssueId(String issueId) {
+	public void setIssueId(final String issueId) {
 		this.issueId = issueId;
 	}
 
 	public String getSummary() {
-		return summary;
+		return this.summary;
 	}
 
-	public void setSummary(String summary) {
+	public void setSummary(final String summary) {
 		this.summary = summary;
 	}
 
 	public LocalDate getCreatedOn() {
-		return createdOn;
+		return this.createdOn;
 	}
 
-	public void setCreatedOn(LocalDate createdOn) {
+	public void setCreatedOn(final LocalDate createdOn) {
 		this.createdOn = createdOn;
 	}
 
 	public LocalDate getExpectedResolutionOn() {
-		return expectedResolutionOn;
+		return this.expectedResolutionOn;
 	}
 
-	public void setExpectedResolutionOn(LocalDate expectedResolutionOn) {
+	public void setExpectedResolutionOn(final LocalDate expectedResolutionOn) {
 		this.expectedResolutionOn = expectedResolutionOn;
 	}
 
 	public String getPriority() {
-		return priority;
+		return this.priority;
 	}
 
-	public void setPriority(String priority) {
+	public void setPriority(final String priority) {
 		this.priority = priority;
 	}
 
 	public String getStatus() {
-		return status;
+		return this.status;
 	}
 
-	public void setStatus(String status) {
+	public void setStatus(final String status) {
 		this.status = status;
 	}
 
 	public Employee getAssignedTo() {
-		return assignedTo;
+		return this.assignedTo;
 	}
 
-	public void setAssignedTo(Employee assignedTo) {
+	public void setAssignedTo(final Employee assignedTo) {
 		this.assignedTo = assignedTo;
 	}
 
