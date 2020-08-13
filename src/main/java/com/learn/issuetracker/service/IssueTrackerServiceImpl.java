@@ -58,7 +58,7 @@ public class IssueTrackerServiceImpl implements IssueTrackerService {
 	 */
 	@Override
 	public long getClosedIssueCount() {
-		return this.getIssuesByStatus("CLOSED").size();
+		return Long.valueOf(this.getIssuesByStatus("CLOSED").size());
 	}
 
 	/*
@@ -68,11 +68,14 @@ public class IssueTrackerServiceImpl implements IssueTrackerService {
 
 	@Override
 	public Issue getIssueById(String issueId) throws IssueNotFoundException {
-		for (Issue I : this.issueDao.getIssues()) {
-			if (I.getIssueId().equals(issueId))
-				return I;
-		}
-		throw new IssueNotFoundException();
+
+		Issue issue = this.issueDao.getIssues().stream().filter(I -> I.getIssueId().equals(issueId)).findFirst()
+				.orElse(null);
+
+		if (issue == null)
+			throw new IssueNotFoundException();
+		else
+			return issue;
 	}
 
 	/*
@@ -83,18 +86,18 @@ public class IssueTrackerServiceImpl implements IssueTrackerService {
 	 */
 	@Override
 	public Optional<Employee> getIssueAssignedTo(String issueId) {
+		Optional<Employee> employee = Optional.empty();
 		try {
 			Issue I = this.getIssueById(issueId);
-			Employee E = I.getAssignedTo();
 
-			if (E != null)
-				return Optional.of(E);
+			if (I.getAssignedTo() != null)
+				employee = Optional.of(I.getAssignedTo());
 
-			return Optional.empty();
 		} catch (IssueNotFoundException e) {
 			e.printStackTrace();
-			return Optional.empty();
 		}
+
+		return employee;
 	}
 
 	/*
@@ -103,14 +106,10 @@ public class IssueTrackerServiceImpl implements IssueTrackerService {
 	 */
 	@Override
 	public List<Issue> getIssuesByStatus(String status) {
-		List<Issue> selectedIssues = new ArrayList<Issue>();
 
-		for (Issue I : this.issueDao.getIssues()) {
-			if (I.getStatus().equals(status))
-				selectedIssues.add(I);
-		}
+		return this.issueDao.getIssues().stream().filter(I -> I.getStatus().equals(status))
+				.collect(Collectors.toList());
 
-		return selectedIssues;
 	}
 
 	/*
@@ -120,18 +119,15 @@ public class IssueTrackerServiceImpl implements IssueTrackerService {
 	@Override
 	public Set<String> getOpenIssuesInExpectedResolutionOrder() {
 		List<Issue> openIssues = this.getIssuesByStatus("OPEN");
-		Set<String> issueSet = new LinkedHashSet<String>();
 
 		Comparator<Issue> resolutionDate = (Issue I1, Issue I2) -> I1.getExpectedResolutionOn()
 				.compareTo(I2.getExpectedResolutionOn());
 
-		Collections.sort(openIssues, resolutionDate);
+		Collections.sort(openIssues,resolutionDate);
 
-		for (Issue I : openIssues) {
-			issueSet.add(I.getIssueId());
-		}
+		return openIssues.stream().map(Issue::getIssueId)
+				.collect(Collectors.toCollection(LinkedHashSet::new));
 
-		return issueSet;
 	}
 
 	/*
@@ -144,6 +140,7 @@ public class IssueTrackerServiceImpl implements IssueTrackerService {
 
 		Comparator<Issue> resolutionDate = (Issue I1, Issue I2) -> I1.getExpectedResolutionOn()
 				.compareTo(I2.getExpectedResolutionOn());
+
 		Comparator<Issue> priority = (Issue I1, Issue I2) -> I1.getPriority().compareTo(I2.getPriority());
 
 		Collections.sort(openIssues, priority.reversed().thenComparing(resolutionDate));
@@ -158,25 +155,14 @@ public class IssueTrackerServiceImpl implements IssueTrackerService {
 	 */
 	@Override
 	public List<String> getOpenIssuesDelayedbyEmployees() {
-		Set<String> employeeNames = new HashSet<String>();
 
-		for (Issue I : this.getIssuesByStatus("OPEN")) {
-			LocalDate resolutionDate = I.getExpectedResolutionOn();
-			if (today.compareTo(resolutionDate) > 0
-					&& ChronoUnit.DAYS.between(resolutionDate, this.today) > 7) {
-				employeeNames.add(I.getAssignedTo().getName());
-			}
+		List<Issue> openIssues = this.getIssuesByStatus("OPEN");
 
-		}
-
-		List<String> employeeNamesList = new ArrayList<String>();
-
-		for (String e : employeeNames) {
-			employeeNamesList.add(e);
-		}
-
-		System.out.println(employeeNamesList);
-		return employeeNamesList;
+		return openIssues.stream().filter(issue -> {
+			LocalDate resolutionDate = issue.getExpectedResolutionOn();
+			return (this.today.compareTo(resolutionDate) > 0
+					&& ChronoUnit.DAYS.between(resolutionDate, this.today) > 7);
+		}).map(issue -> issue.getAssignedTo().getName()).distinct().collect(Collectors.toList());
 	}
 
 	/*
@@ -194,6 +180,7 @@ public class IssueTrackerServiceImpl implements IssueTrackerService {
 				highPriorityMap.put(I.getIssueId(), I.getAssignedTo().getEmplId());
 			}
 		}
+
 		return highPriorityMap;
 	}
 
@@ -206,17 +193,7 @@ public class IssueTrackerServiceImpl implements IssueTrackerService {
 		List<Issue> openIssues = this.getIssuesByStatus("OPEN");
 		Map<String, List<Issue>> priorityMap = new HashMap<String, List<Issue>>();
 
-		List<Issue> highPriority = openIssues.stream().filter(I -> I.getPriority().equals("HIGH"))
-				.collect(Collectors.toList());
-		priorityMap.put("HIGH", highPriority);
-
-		List<Issue> mediumPriority = openIssues.stream().filter(I -> I.getPriority().equals("MEDIUM"))
-				.collect(Collectors.toList());
-		priorityMap.put("MEDIUM", mediumPriority);
-
-		List<Issue> lowPriority = openIssues.stream().filter(I -> I.getPriority().equals("LOW"))
-				.collect(Collectors.toList());
-		priorityMap.put("LOW", lowPriority);
+		priorityMap = openIssues.stream().collect(Collectors.groupingBy(I -> String.valueOf(I.getPriority())));
 
 		return priorityMap;
 	}
@@ -248,6 +225,7 @@ public class IssueTrackerServiceImpl implements IssueTrackerService {
 		Set<String> locations = new HashSet<String>();
 		List<Issue> openIssues = this.getIssuesByStatus("OPEN");
 		Map<String, List<String>> openIssuesByLocation = new HashMap<String, List<String>>();
+
 		for (Issue I : openIssues) {
 			locations.add(I.getAssignedTo().getLocation());
 		}
@@ -269,15 +247,16 @@ public class IssueTrackerServiceImpl implements IssueTrackerService {
 	 */
 	@Override
 	public Map<String, Long> getHighMediumOpenIssueDuration() {
-		Map<String,Long> highMedIssueDurationMap = new HashMap<String,Long>();
+		Map<String, Long> highMedIssueDurationMap = new HashMap<String, Long>();
 
 		List<Issue> openIssues = this.getIssuesByStatus("OPEN");
 
-		List<Issue> highMediumIssues = openIssues.stream().filter(I -> !I.getPriority().equals("LOW")).collect(Collectors.toList());
+		List<Issue> highMediumIssues = openIssues.stream().filter(I -> !I.getPriority().equals("LOW"))
+				.collect(Collectors.toList());
 
-		for(Issue I: highMediumIssues) {
+		for (Issue I : highMediumIssues) {
 			Long duration = Long.valueOf(ChronoUnit.DAYS.between(I.getCreatedOn(), this.today));
-			highMedIssueDurationMap.put(I.getIssueId(),duration);
+			highMedIssueDurationMap.put(I.getIssueId(), duration);
 		}
 
 		return highMedIssueDurationMap;
